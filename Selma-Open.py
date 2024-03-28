@@ -27,7 +27,7 @@ def obtener_info_selma_digital(nombre_producto):
         for title, price in zip(titles, prices):
             # Obtener el título y el precio y agregarlos a la lista
             titulo = title.text.strip()
-            precio = price.text.strip().replace('$', '').replace(',', '')  # Eliminar caracteres no numéricos del precio
+            precio = price.text.strip().replace('$', '').replace(',', '').replace('.','_')  # Eliminar caracteres no numéricos del precio
             productos.append({'Título': titulo, 'Precio': float(precio)})
 
         return productos
@@ -82,14 +82,14 @@ def comparar_precios(productos_selma_digital, productos_openfarma):
                     print(f'Ambos tienen el mismo precio para "{titulo_selma}": ${precio_selma}')
 
 # Nombre del producto a buscar en ambas farmacias
-nombre_producto = 'Crema De Manos Antimanchas Eucerin Anti Pigment X 75 Ml'
+nombre_producto = input("Ingrese el nombre del producto a buscar: ")
 
 # Obtener e imprimir la información de los productos de Selma Digital
 productos_selma_digital = obtener_info_selma_digital(nombre_producto)
 if productos_selma_digital:
     print(f'Productos encontrados en Selma Digital para "{nombre_producto}":')
     for idx, producto in enumerate(productos_selma_digital, start=1):
-        print(f'#{idx} - Título: {producto["Título"]}, Precio: ${producto["Precio"]}')
+        print(f'#{idx} - Títulfo: {producto["Título"]}, Precio: ${producto["Precio"]}')
 else:
     print(f'No se pudo obtener la información de Selma Digital para "{nombre_producto}".')
 
