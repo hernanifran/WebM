@@ -27,7 +27,7 @@ def obtener_info_selma_digital(nombre_producto):
         for title, price in zip(titles, prices):
             # Obtener el título y el precio y agregarlos a la lista
             titulo = title.text.strip()
-            precio = price.text.strip().replace('$', '').replace(',', '').replace('.','_')  # Eliminar caracteres no numéricos del precio
+            precio = price.text.strip().replace('$', '').replace('.', '').replace(',', '.')  # Eliminar caracteres no numéricos del precio
             productos.append({'Título': titulo, 'Precio': float(precio)})
 
         return productos
@@ -89,7 +89,7 @@ productos_selma_digital = obtener_info_selma_digital(nombre_producto)
 if productos_selma_digital:
     print(f'Productos encontrados en Selma Digital para "{nombre_producto}":')
     for idx, producto in enumerate(productos_selma_digital, start=1):
-        print(f'#{idx} - Títulfo: {producto["Título"]}, Precio: ${producto["Precio"]}')
+        print(f'#{idx} - Título: {producto["Título"]}, Precio: ${producto["Precio"]}')
 else:
     print(f'No se pudo obtener la información de Selma Digital para "{nombre_producto}".')
 
