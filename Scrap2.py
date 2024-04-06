@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def obtener_info_mercadolibre(nombre_producto):
-    # URL de MercadoLibre
+    # URL de MercadoLibre       
     url_mercadolibre = f'https://listado.mercadolibre.com.ar/{nombre_producto}'
 
     # Realizar la solicitud HTTP con headers simulando un navegador
