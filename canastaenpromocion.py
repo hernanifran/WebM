@@ -79,6 +79,39 @@ def obtener_mejores_promos_farmacity():
 
     return productos_list
 
+# Función para obtener la información de un producto en la página de Selma Digital
+def obtener_info_selma_digital():
+    # URL de Selma
+    url_selma = f'https://selmadigital.com/'
+    
+    # Realizar la solicitud HTTP
+    response_selma_digital = requests.get(url_selma)
+
+    # Verificar si la solicitud fue exitosa (código de estado 200)
+    if response_selma_digital.status_code == 200:
+        # Parsear el contenido HTML con BeautifulSoup
+        soup_selma_digital = BeautifulSoup(response_selma_digital.content, 'html.parser')
+
+        # Buscar los elementos que contienen el título con la clase "product-card-design8-vertical__name"
+        titles = soup_selma_digital.find_all('div', class_='product-card-design8-vertical__name')
+
+        # Buscar los elementos que contienen el precio con la clase "product-card-design8-vertical__price"
+        prices = soup_selma_digital.find_all('div', class_='product-card-design8-vertical__price')
+        
+        # Lista para almacenar los productos como diccionarios
+        productos = []
+
+        # Iterar sobre los elementos y obtener los títulos y precios
+        for title, price in zip(titles, prices):
+            # Obtener el título y el precio
+            titulo = title.text.strip()
+            precio = price.text.strip().replace('$', '').replace('.', '').replace(',', '')  # Eliminar caracteres no numéricos del precio
+            
+            # Agregar el producto como un diccionario a la lista de productos
+            productos.append({'Título': titulo, 'Precio': float(precio)})
+
+    return productos
+
 def enviar_mail(productos, tienda):
     # Cargar las variables de entorno desde el archivo .env
     load_dotenv()
@@ -125,7 +158,9 @@ def buscar_canasta_productos():
     enviar_mail(productos_openfarma, "Openfarma")
     
     productos_farmacity = obtener_mejores_promos_farmacity()
-    print(productos_farmacity)
     enviar_mail(productos_farmacity, "Farmacity")
+    
+    productos_selma = obtener_info_selma_digital()
+    enviar_mail(productos_selma, "Selma")
 
 buscar_canasta_productos()
