@@ -139,7 +139,7 @@ def enviar_mail(productos, tienda):
         for producto_interesante in productos_interesantes:
             encontrado = False
             for producto in productos:
-                if fuzz.ratio(producto_interesante.lower(), producto["Título"].lower()) > 60:
+                if fuzz.ratio(producto_interesante.lower(), producto["Título"].lower()) > 35:
                     encontrado = True
                     break
             if not encontrado:
