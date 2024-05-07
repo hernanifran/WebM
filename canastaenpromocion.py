@@ -1,9 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-from fuzzywuzzy import fuzz
-
 from email.message import EmailMessage
 import smtplib
+from fuzzywuzzy import fuzz
 
 import os
 from dotenv import load_dotenv
@@ -15,16 +14,17 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from operator import itemgetter
 
+# Lista de productos de interés
+productos_interesantes = ["kit serum", "suplmento dietario", "desodorante"]
 
 def obtener_imperdibles_openfarma():
-    
     # URL de Openfarma
     url_openfarma = f'https://www.openfarma.com.ar/'
     
     # Realizar la solicitud HTTP
     response_openfarma = requests.get(url_openfarma)    
     
-    # Verificar si la solicitud fue exitosa (código de estado 200)
+    # Verificar si la solicitud fue exitosa (código de estado 200)'
     if response_openfarma.status_code == 200:
         # Parsear el contenido HTML con BeautifulSoup
         soup_openfarma = BeautifulSoup(response_openfarma.content, 'html.parser')
@@ -35,15 +35,15 @@ def obtener_imperdibles_openfarma():
         # Buscar los elementos que contienen el precio con la clase "promo dis-inblk"
         prices = soup_openfarma.find_all('span', attrs={'class':'promo dis-inblk'})
         
-         # Crear una lista para almacenar los productos
+        # Crear una lista para almacenar los productos
         productos = []
 
         # Iterar sobre los elementos y obtener los títulos y precios
         for title, price in zip(titles, prices):
             # Obtener el título y el precio y agregarlos a la lista
             titulo = title.text.strip()
-            precio = price.text.strip().replace('$', '').replace('.', '').replace(',', '.')  # Formatear el precio
-            productos.append({'Título': titulo, 'Precio': float(precio)})
+            precio = float(price.text.strip().replace('$', '').replace('.', '').replace(',', '.'))  # Formatear el precio
+            productos.append({'Título': titulo, 'Precio': precio})
 
         return productos
 
@@ -79,7 +79,7 @@ def obtener_mejores_promos_farmacity():
 
     return productos_list
 
-def enviar_mail_openfarma():
+def enviar_mail(productos, tienda):
     # Cargar las variables de entorno desde el archivo .env
     load_dotenv()
     
@@ -89,57 +89,29 @@ def enviar_mail_openfarma():
     smtp_username = os.getenv('SMTP_USERNAME')
     smtp_password = os.getenv('SMTP_PASSWORD')
     
-    # Obtener y enviar la información de los productos de Openfarma
-    productos_openfarma = obtener_imperdibles_openfarma()
-    if productos_openfarma:
-        message = ""
-        for idx, producto in enumerate(productos_openfarma, start=1):
-            message = message + f'#{idx} - Título: {producto["Título"]}, Precio: ${producto["Precio"]}\n'
-
-    # Enviar mail con ofertas
-
     sender = smtp_username
     recipient = "jevaldescastro@mail.austral.edu.ar"
 
     email = EmailMessage()
     email["From"] = sender
     email["To"] = recipient
-    email["Subject"] = "Precios imperdibles de Openfarma"
-    email.set_content(message)
-
-    smtp = smtplib.SMTP(smtp_server, smtp_port)
-    smtp.starttls()
-    smtp.login(sender, smtp_password)
-    smtp.sendmail(sender, recipient, email.as_string())
-    smtp.quit()
-
-def enviar_mail_farmacity():
-    # Cargar las variables de entorno desde el archivo .env
-    load_dotenv()
-    
-    # Configurar los detalles del servidor SMTP
-    smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = int(os.getenv('SMTP_PORT'))
-    smtp_username = os.getenv('SMTP_USERNAME')
-    smtp_password = os.getenv('SMTP_PASSWORD')
-    
-    # Obtener y enviar la información de los productos de Farmacity
-    productos_farmacity = obtener_mejores_promos_farmacity()
+    email["Subject"] = f"Productos en promoción de {tienda}"
     
     message = ""
-    if productos_farmacity:       
-        for idx, producto in enumerate(productos_farmacity, start=1):
-            message = message + f'#{idx} - Título: {producto["Título"]}, Precio: ${producto["Precio"]}\n'
+    if productos:
+        for idx, producto in enumerate(productos, start=1):
+            message += f'#{idx} - Título: {producto["Título"]}, Precio: ${producto["Precio"]}\n'
 
-    # Enviar mail con ofertas
-
-    sender = smtp_username
-    recipient = "jevaldescastro@mail.austral.edu.ar"
-
-    email = EmailMessage()
-    email["From"] = sender
-    email["To"] = recipient
-    email["Subject"] = "Mejores 2x1 de Farmacity"
+        # Verificar si hay productos de interés que no estén en la lista de productos en promoción
+        for producto_interesante in productos_interesantes:
+            encontrado = False
+            for producto in productos:
+                if fuzz.ratio(producto_interesante.lower(), producto["Título"].lower()) > 60:
+                    encontrado = True
+                    break
+            if not encontrado:
+                message += f"No encontramos '{producto_interesante}' en promoción. Quizás la próxima tengas más suerte.\n"
+    
     email.set_content(message)
 
     smtp = smtplib.SMTP(smtp_server, smtp_port)
@@ -148,5 +120,12 @@ def enviar_mail_farmacity():
     smtp.sendmail(sender, recipient, email.as_string())
     smtp.quit()
 
-enviar_mail_farmacity()
-enviar_mail_openfarma()
+def buscar_canasta_productos():
+    productos_openfarma = obtener_imperdibles_openfarma()
+    enviar_mail(productos_openfarma, "Openfarma")
+    
+    productos_farmacity = obtener_mejores_promos_farmacity()
+    print(productos_farmacity)
+    enviar_mail(productos_farmacity, "Farmacity")
+
+buscar_canasta_productos()
